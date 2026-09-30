@@ -67,3 +67,23 @@ def test_agent_records_prompt_version_with_v4_observation_api(monkeypatch) -> No
     assert span_update["version"] == "3"
     assert propagated[0]["metadata"]["correlation_id"] == "req-12345678"
     assert propagated[-1]["prompt"] is client.prompt
+
+
+def test_agent_child_observations_metadata(monkeypatch) -> None:
+    agent = agent_module.LabAgent()
+    gen_updates: list[dict] = []
+
+    class MockClient:
+        def update_current_generation(self, **kwargs) -> None:
+            gen_updates.append(kwargs)
+
+    monkeypatch.setattr(agent_module, "get_langfuse_client", lambda: MockClient())
+
+    response = agent._generate("test prompt", managed_prompt=None)
+    assert response is not None
+    assert len(gen_updates) == 1
+    assert gen_updates[0]["model"] == agent.model
+    assert "input" in gen_updates[0]["usage_details"]
+    assert "output" in gen_updates[0]["usage_details"]
+    assert "total" in gen_updates[0]["cost_details"]
+

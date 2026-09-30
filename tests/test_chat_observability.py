@@ -40,3 +40,27 @@ def test_chat_response_log_exposes_quality_for_dashboard(
     assert response_event["ttft_ms"] == response.json()["ttft_ms"]
     assert response_event["tool_name"] == "retrieval"
     assert response_event["tool_success"] is True
+    assert "user_id_hash" in response_event
+    assert response_event["session_id"] == "session-01"
+    assert response_event["feature"] == "qa"
+    assert response_event["model"] == "claude-sonnet-4-5"
+    assert "correlation_id" in response_event
+
+
+
+def test_correlation_id_middleware_headers() -> None:
+    async def run() -> None:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            resp_auto = await client.get("/health")
+            assert resp_auto.status_code == 200
+            assert "x-request-id" in resp_auto.headers
+            assert resp_auto.headers["x-request-id"].startswith("req-")
+            assert "x-response-time-ms" in resp_auto.headers
+
+            custom_id = "req-aabb1122"
+            resp_custom = await client.get("/health", headers={"x-request-id": custom_id})
+            assert resp_custom.headers.get("x-request-id") == custom_id
+
+    asyncio.run(run())
+

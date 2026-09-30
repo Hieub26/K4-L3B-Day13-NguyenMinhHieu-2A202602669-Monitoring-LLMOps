@@ -5,11 +5,14 @@ import re
 
 PII_PATTERNS: dict[str, str] = {
     "email": r"[\w\.-]+@[\w\.-]+\.\w+",
-    "phone_vn": r"(?<!\d)(?:\+84|0)(?:[ .-]?\d){9}(?!\d)",
-    "cccd": r"\b\d{12}\b",
-    "credit_card": r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b",
-    # TODO: Add more patterns (e.g., Passport, Vietnamese address keywords)
+    "phone_vn": r"(?<!\d)(?:\+?84|0)(?:[ .-]?\d){9}(?!\d)",
+    "credit_card": r"\b(?:\d{4}[- ]?){3}\d{4}\b",
+    "cccd": r"\b\d{12}\b|\b(?:\d{3}[- ]){3}\d{3}\b",
+    "passport": r"\b[A-Za-z]{1,2}\d{7,8}\b",
+    "address_vn": r"(?i)\b(?:Số|Ngõ|Hẻm|Đường)\s+\d+.*?\b(?:Quận|Huyện|Phường|Thị xã|Thành phố|Tỉnh)\s+[A-Za-zÀ-ỹ0-9\s]+\b",
 }
+
+
 
 
 def scrub_text(text: str) -> str:
